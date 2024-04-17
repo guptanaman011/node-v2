@@ -27,37 +27,13 @@ export class CalcService {
 
   // function used to evaluate the expression
   private evaluateExpression(expression: string): number {
-    const precedenceMap: { [key: string]: number } = {
-      '+': 1,
-      '-': 1,
-      '*': 2,
-      '/': 2,
-    };
-  
-    const parts = expression.split(/([\+\-\*\/])/g);
-    const stack: (string | number)[] = [];
-    const outputQueue: (string | number)[] = [];
-  
-    for (const token of parts) {
-      if (token in precedenceMap) {
-        while (
-          stack.length > 0 &&
-          precedenceMap[token] <= precedenceMap[stack[stack.length - 1] as string]
-        ) {
-          outputQueue.push(stack.pop() as string);
-        }
-        stack.push(token);
-      } else {
-        outputQueue.push(parseFloat(token));
-      }
-    }
-  
-    while (stack.length > 0) {
-      outputQueue.push(stack.pop() as string);
-    }
-  
+   
+    // convert the expression from infix to postfix
+    const postfixExpression = this.convertInfixToPostfix(expression);
+
+    // evaluate the result using postfix operation
     const resultStack: number[] = [];
-    for (const token of outputQueue) {
+    for (const token of postfixExpression) {
       if (typeof token === 'number') {
         resultStack.push(token);
       } else {
@@ -85,12 +61,48 @@ export class CalcService {
         }
       }
     }
-  
+    
+    // only one element should be left inside resultStack at last that is result, if not then return error
     if (resultStack.length !== 1) {
       throw new Error('Invalid expression');
     }
   
     return resultStack[0];
+  }
+
+  private convertInfixToPostfix(expression: string): (string | number)[] {
+
+    const precedenceMap: { [key: string]: number } = {
+      '+': 1,
+      '-': 1,
+      '*': 2,
+      '/': 2,
+    };
+
+    const parts = expression.split(/([\+\-\*\/])/g);
+    const stack: (string | number)[] = [];
+    const outputQueue: (string | number)[] = [];
+
+    for (const token of parts) {
+      if (token in precedenceMap) {
+        while (
+          stack.length > 0 &&
+          precedenceMap[token] <= precedenceMap[stack[stack.length - 1] as string]
+        ) {
+          outputQueue.push(stack.pop() as string);
+        }
+        stack.push(token);
+      } else {
+        outputQueue.push(parseFloat(token));
+      }
+    }
+  
+    while (stack.length > 0) {
+      // outputQueue contains the Postfix expression
+      outputQueue.push(stack.pop() as string);
+    }
+
+    return outputQueue;
   }
 
 }
